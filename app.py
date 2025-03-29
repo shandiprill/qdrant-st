@@ -57,6 +57,14 @@ def upload_pdf_and_index(client, collection_name, pdf_file):
         st.error(f"Erro ao processar e indexar o PDF: {e}")
         st.exception(e) # Mostra o stack trace completo
 
+def test_qdrant_connection(url, port):
+    try:
+        client = QdrantClient(url=url, port=port)
+        client.get_collection(collection_name="__test_connection__")  # Tenta acessar uma coleção inexistente para testar a conexão
+        return True, None  # Conexão bem-sucedida
+    except Exception as e:
+        return False, str(e) # Conexão falhou
+
 # --- Interface Streamlit ---
 def main():
     st.title("Gerenciador de Banco de Vetores Qdrant")
@@ -66,9 +74,18 @@ def main():
     qdrant_url = st.sidebar.text_input("URL do Qdrant", value="http://localhost")
     qdrant_port = st.sidebar.number_input("Porta do Qdrant", value=6333, step=1)
 
+    if st.sidebar.button("Testar Conexão"):
+        success, error = test_qdrant_connection(qdrant_url, qdrant_port)
+        if success:
+            st.sidebar.success("Conexão com o Qdrant bem-sucedida!")
+        else:
+            st.sidebar.error(f"Erro ao conectar ao Qdrant: {error}")
+            # Não retorna aqui, deixa o usuário tentar novamente
+
     try:
         client = QdrantClient(url=qdrant_url, port=qdrant_port)
-        st.sidebar.success("Conectado ao Qdrant!")
+        # Conexão já foi testada, não precisa repetir aqui (a menos que queira reconectar periodicamente)
+        # st.sidebar.success("Conectado ao Qdrant!") # Remova ou condicione se quiser reconectar automaticamente
     except Exception as e:
         st.sidebar.error(f"Erro ao conectar ao Qdrant: {e}")
         return  # Impede que o resto do app execute se não conseguir conectar
