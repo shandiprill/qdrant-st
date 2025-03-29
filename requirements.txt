@@ -1,0 +1,5 @@
+streamlit
+qdrant-client
+pypdf2
+langchain
+tiktoken
